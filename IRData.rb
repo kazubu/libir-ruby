@@ -3,9 +3,9 @@ class IRData
   @format = nil
 
   T = {
-    :aeha => 425.0,
-    :nec => 562.0,
-    :sony => 600.0
+    :aeha => 425,
+    :nec => 562,
+    :sony => 600
   }
 
   def data
@@ -29,12 +29,35 @@ class IRData
     end
   end
 
+  def self.new_by_str(data, format)
+    raise "unknown format" if T[format].nil?
+    case format
+    when :aeha
+      return self.new(create_data_aeha(data))
+    when :nec
+      return self.new(create_data_nec(data))
+    when :sony
+      return self.new(create_data_sony(data))
+    end
+  end
+
+private
+
+  def initialize(data)
+    @data = data
+    @format = format?
+    @data = FixAlignment(@data, @format)
+  end
+
+  def str_initialize(data, format)
+      end
+
   def data_inspect_aeha
-    data = @data.map{|v| (v / T[:aeha]).to_i}
+    data = @data.map{|v| (v / T[:aeha])}
     data_bin = "" 
     for i in 1..((data.size/2)-1)
-      d1 = data[i*2].to_i
-      d2 = data[1+i*2].to_i
+      d1 = data[i*2]
+      d2 = data[1+i*2]
 
       if d1 == 1 && d2 == 3
         data_bin << "1"
@@ -62,29 +85,66 @@ class IRData
     raise 'not implemented yet'
   end
 
-private
+  def self.create_data_aeha(hexstr)
+    data = []
+    data << 8*T[:aeha]
+    data << 4*T[:aeha]
+    binstr = [hexstr].pack("H*").unpack("B*")[0]
+    binstr.each_char{|c|
+      if c == "0"
+        data << 1*T[:aeha]
+        data << 1*T[:aeha]
+      elsif c == "1"
+        data << 1*T[:aeha]
+        data << 3*T[:aeha]
+      end
+    }
+    data << 1*T[:aeha] # Trailer
 
-  def initialize(data)
-    @data = data
-    @format = format?
-    @data = FixAlignment(@data, @format)
+    return data
   end
+
+  def self.create_data_nec(hexstr)
+    data = []
+    data << 16*T[:nec]
+    data << 8*T[:nec]
+    binstr = [hexstr].pack("H*").unpack("B*")[0]
+    binstr.each_char{|c|
+      if c == "0"
+        data << 1*T[:nec]
+        data << 1*T[:nec]
+      elsif c == "1"
+        data << 1*T[:nec]
+        data << 3*T[:nec]
+      end
+    }
+    data << 1*T[:nec] # Trailer
+
+    return data
+  end
+
+
+  def self.create_data_sony(hexstr)
+    raise 'not implemented yet'
+  end
+
+
 
   def FixAlignment(data, type)
     t = T[type]
-    data.map{|v|((v/(t)).round)*t.to_i}
+    data.map{|v|((v/t.to_f).round)*t}
   end
 
   def check_nec(data)
-    (data[0] == 16*562 && data[1] == 8*562) # Leader:16T8T
+    (data[0] == 16*T[:nec] && data[1] == 8*T[:nec] ) # Leader:16T8T
   end
 
   def check_aeha(data)
-    (data[0] == 8*425 && data[1] == 4*425) # Leader:8T4T
+    (data[0] == 8*T[:aeha] && data[1] == 4*T[:aeha]) # Leader:8T4T
   end
 
   def check_sony(data)
-    (data[0] == 4*600 && data[1] == 1*600) # Leader:4T, next data must be started by 1T
+    (data[0] == 4*T[:sony] && data[1] == 1*T[:sony]) # Leader:4T, next data must be started by 1T
   end
 
   def format?
