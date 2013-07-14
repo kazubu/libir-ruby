@@ -1,37 +1,144 @@
 #include <ruby.h>
-VALUE rb_cIR;
+#include <wiringPi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sched.h>
+#include <sys/types.h>
+#include "unistd.h"
 
-VALUE meth_initialize(){
-  //TODO: initialize
 
-  return INT2FIX(0);
+const int IRledPin = 1;
+const int IRrecvPin = 7;
+
+void pulseIR(int microsecs) {
+  while (microsecs > 0) {
+    // 38 kHz is about 13 microseconds high and 13 microseconds low
+    digitalWrite(IRledPin, HIGH); // this takes about 2 microseconds to happen
+    delayMicrosecondsHard(11); // hang out for 11 microseconds
+    digitalWrite(IRledPin, LOW); // this also takes about 2 microseconds
+    delayMicrosecondsHard(11); // hang out for 11 microseconds
+    microsecs -= 26;
+  }
 }
 
-VALUE meth_sendIr(VALUE self, VALUE varr){
-  VALUE ret;
+void sendIr(unsigned int irData[], int length){
+  int i;
+
+  puts("Send start");
+  for(i=0;i<length;i++){
+    if(i%2 == 0){
+      pulseIR(irData[i]);
+    }else{
+      delayMicrosecondsHard(irData[i]);
+    }
+  }
+  puts("Send finish");
+
+  if(length%2 != 0){
+    digitalWrite(IRledPin, LOW);
+  }
+  digitalWrite(IRledPin, LOW);
+}
+
+VALUE readIr() {
+  unsigned long count = 0;
+
+  VALUE ret = rb_ary_new();
+
+  while(digitalRead(IRrecvPin) == 1); // waiting first signal
+
+  unsigned int lastChanged = micros();
+  unsigned int now = 0;
+
+  //  信号が来ている間はLOW(0)
+  int lastSignal = 0;
+
+  while(1){
+    if(lastSignal){ //HIGH
+      count = 0;
+      while(digitalRead(IRrecvPin) == 1){
+        //count++;
+        //if(count>50000000){
+        //  return; //50000000待っても信号の変化がないなら終了
+        //}
+        if(micros() - lastChanged > 20000){
+          return;
+        }
+      }
+    }else{ //LOW
+      while(digitalRead(IRrecvPin) == 0);
+    }
+    //  現在時刻を保存
+    now = micros();
+    //  信号のオンオフが変化するまでにかかった時間(マイクロ秒)を記録
+    rb_ary_push(ret, INT2FIX(now-lastChanged));
+    //  次の変化までの時間を計測できるよう準備
+    lastChanged = now;
+
+    if(lastSignal){
+      lastSignal = 0;
+    } else {
+      lastSignal = 1;
+    }
+  }
+  return ret;
+}
+
+
+VALUE intary_to_rbary(int ia[], int length){
+  VALUE ra = rb_ary_new();
+  int i;
+
+  for(i=0;i<length;i++){
+    rb_ary_push(ra, INT2FIX(ia[i]));
+  }
+
+  return ra;
+}
+
+VALUE meth_initialize(){
+  if (wiringPiSetup () == -1)
+    return Qfalse;
+
+  pinMode(IRledPin, OUTPUT);
+  pinMode (IRrecvPin, INPUT);
+
+  delayMicrosecondsHard(25000);
+
+  return Qnil;
+}
+
+VALUE meth_sendIr(VALUE self, volatile VALUE varr){
+  int ret;
   int length = RARRAY_LEN(varr);
   int i;
 
   Check_Type(varr, T_ARRAY);
 
+  int arr[length];
+
   for(i=0; i<length; i++){//XXX: Dummy 
     VALUE vval = rb_ary_entry(varr,i);
-    Check_Type(vval, T_FIXNUM);
-    int val = FIX2INT(vval);
-    printf("%d\n", val);
+    int val = NUM2INT(vval);
+    arr[i] = val;
   }
 
-  ret = INT2FIX(0);
-  return ret;
+  sendIr(arr, length);
+
+  ret = 0;
+  return INT2FIX(ret);
 }
 
 VALUE meth_recvIr(VALUE self){
   //TODO: receive
   
-  return INT2FIX(0);
+  int a[5] = {1,2,3,4,5};
+
+  return intary_to_rbary(a, 5); 
 }
 
 void Init_IR(void){
+  VALUE rb_cIR;
   rb_cIR = rb_define_class("IR", rb_cObject);
 
   rb_define_private_method(rb_cIR, "initialize", meth_initialize, 0);
