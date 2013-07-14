@@ -49,9 +49,6 @@ private
     @data = FixAlignment(@data, @format)
   end
 
-  def str_initialize(data, format)
-      end
-
   def data_inspect_aeha
     data = @data.map{|v| (v / T[:aeha])}
     data_bin = "" 
@@ -79,10 +76,12 @@ private
 
   def data_inspect_nec
     raise 'not implemented yet'
+    data = @data.map{|v| (v / T[:nec])}
   end
 
   def data_inspect_sony
     raise 'not implemented yet'
+    data = @data.map{|v| (v / T[:sony])}
   end
 
   def self.create_data_aeha(hexstr)
