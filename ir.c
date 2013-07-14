@@ -88,7 +88,7 @@ VALUE intary_to_rbary(int ia[], int length){
 }
 
 VALUE meth_initialize(){
-  if (wiringPiSetup () == -1){
+  if (wiringPiSetup() == -1){
     rb_raise(rb_eFatal, "Couldn't setup wiringPi");
   }
 
@@ -101,7 +101,6 @@ VALUE meth_initialize(){
 }
 
 VALUE meth_sendIr(VALUE self, volatile VALUE varr){
-  int ret;
   int length = RARRAY_LEN(varr);
   int i;
 
@@ -109,7 +108,7 @@ VALUE meth_sendIr(VALUE self, volatile VALUE varr){
 
   int arr[length];
 
-  for(i=0; i<length; i++){//XXX: Dummy 
+  for(i=0; i<length; i++){
     VALUE vval = rb_ary_entry(varr,i);
     int val = NUM2INT(vval);
     arr[i] = val;
@@ -117,8 +116,7 @@ VALUE meth_sendIr(VALUE self, volatile VALUE varr){
 
   sendIr(arr, length);
 
-  ret = 0;
-  return INT2FIX(ret);
+  return Qnil;
 }
 
 VALUE meth_recvIr(VALUE self){
