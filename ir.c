@@ -10,32 +10,26 @@
 const int IRledPin = 1;
 const int IRrecvPin = 7;
 
-void pulseIR(int microsecs) {
-  while (microsecs > 0) {
-    // 38 kHz is about 13 microseconds high and 13 microseconds low
-    digitalWrite(IRledPin, HIGH); // this takes about 2 microseconds to happen
-    delayMicrosecondsHard(11); // hang out for 11 microseconds
-    digitalWrite(IRledPin, LOW); // this also takes about 2 microseconds
-    delayMicrosecondsHard(11); // hang out for 11 microseconds
-    microsecs -= 26;
-  }
-}
-
 void sendIr(int irData[], int length){
   int i;
 
   for(i=0;i<length;i++){
-    if(i%2 == 0){
-      pulseIR(irData[i]);
-    }else{
+    if(i%2 == 0){ //奇数データ目でON
+      int microsecs = irData[i];
+      while (microsecs > 13) {
+        // 38 kHz is about 13 microseconds high and 13 microseconds low
+        digitalWrite(IRledPin, HIGH); // this takes about 2 microseconds to happen
+        delayMicrosecondsHard(7); // hang out for 11 microseconds
+        digitalWrite(IRledPin, LOW); // this also takes about 2 microseconds
+        delayMicrosecondsHard(16); // hang out for 11 microseconds
+        microsecs -= 26;
+      }
+    }else{ //偶数データ目なら待つ
       delayMicrosecondsHard(irData[i]);
     }
   }
 
-  if(length%2 != 0){
-    digitalWrite(IRledPin, LOW);
-  }
-  digitalWrite(IRledPin, LOW);
+  digitalWrite(IRledPin, LOW); //fail-safe
 }
 
 VALUE readIr() {
@@ -52,7 +46,7 @@ VALUE readIr() {
   while(1){
     if(lastSignal){ //HIGH
       while(digitalRead(IRrecvPin) == 1){
-        if(micros() - lastChanged > 20000){
+        if(micros() - lastChanged > 1000000){
           return ret;
         }
       }
