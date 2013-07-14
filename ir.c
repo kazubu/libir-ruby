@@ -21,10 +21,9 @@ void pulseIR(int microsecs) {
   }
 }
 
-void sendIr(unsigned int irData[], int length){
+void sendIr(int irData[], int length){
   int i;
 
-  puts("Send start");
   for(i=0;i<length;i++){
     if(i%2 == 0){
       pulseIR(irData[i]);
@@ -32,7 +31,6 @@ void sendIr(unsigned int irData[], int length){
       delayMicrosecondsHard(irData[i]);
     }
   }
-  puts("Send finish");
 
   if(length%2 != 0){
     digitalWrite(IRledPin, LOW);
@@ -41,8 +39,6 @@ void sendIr(unsigned int irData[], int length){
 }
 
 VALUE readIr() {
-  unsigned long count = 0;
-
   VALUE ret = rb_ary_new();
 
   while(digitalRead(IRrecvPin) == 1); // waiting first signal
@@ -55,14 +51,9 @@ VALUE readIr() {
 
   while(1){
     if(lastSignal){ //HIGH
-      count = 0;
       while(digitalRead(IRrecvPin) == 1){
-        //count++;
-        //if(count>50000000){
-        //  return; //50000000待っても信号の変化がないなら終了
-        //}
         if(micros() - lastChanged > 20000){
-          return;
+          return ret;
         }
       }
     }else{ //LOW
@@ -97,8 +88,9 @@ VALUE intary_to_rbary(int ia[], int length){
 }
 
 VALUE meth_initialize(){
-  if (wiringPiSetup () == -1)
-    return Qfalse;
+  if (wiringPiSetup () == -1){
+    rb_raise(rb_eFatal, "Couldn't setup wiringPi");
+  }
 
   pinMode(IRledPin, OUTPUT);
   pinMode (IRrecvPin, INPUT);
@@ -130,11 +122,7 @@ VALUE meth_sendIr(VALUE self, volatile VALUE varr){
 }
 
 VALUE meth_recvIr(VALUE self){
-  //TODO: receive
-  
-  int a[5] = {1,2,3,4,5};
-
-  return intary_to_rbary(a, 5); 
+  return readIr();
 }
 
 void Init_IR(void){
