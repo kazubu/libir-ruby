@@ -6,6 +6,8 @@
 #include <sys/types.h>
 #include "unistd.h"
 
+#define LOW_STATE 0
+#define HIGH_STATE 1
 
 const int IRledPin = 1;
 const int IRrecvPin = 7;
@@ -16,7 +18,7 @@ void sendIr(int irData[], int length){
   for(i=0;i<length;i++){
     if(i%2 == 0){ //奇数データ目でON
       int microsecs = irData[i];
-      while (microsecs > 13) {
+      while (microsecs > 6) {
         // 38 kHz is about 13 microseconds high and 13 microseconds low
         digitalWrite(IRledPin, HIGH); // this takes about 2 microseconds to happen
         delayMicrosecondsHard(7); // hang out for 11 microseconds
@@ -35,23 +37,23 @@ void sendIr(int irData[], int length){
 VALUE readIr() {
   VALUE ret = rb_ary_new();
 
-  while(digitalRead(IRrecvPin) == 1); // waiting first signal
+  while(digitalRead(IRrecvPin) == HIGH_STATE); // HIGHなら待ち続ける
 
   unsigned int lastChanged = micros();
   unsigned int now = 0;
 
   //  信号が来ている間はLOW(0)
-  int lastSignal = 0;
+  int lastSignal = LOW_STATE; //LOWなはず
 
   while(1){
-    if(lastSignal){ //HIGH
-      while(digitalRead(IRrecvPin) == 1){
-        if(micros() - lastChanged > 1000000){
+    if(lastSignal == HIGH_STATE){
+      while(digitalRead(IRrecvPin) == HIGH_STATE){
+        if(micros() - lastChanged > 1000000){ //1秒以上HIGHのままだったら終わり
           return ret;
         }
       }
-    }else{ //LOW
-      while(digitalRead(IRrecvPin) == 0);
+    }else{
+      while(digitalRead(IRrecvPin) == LOW_STATE);
     }
     //  現在時刻を保存
     now = micros();
@@ -60,13 +62,12 @@ VALUE readIr() {
     //  次の変化までの時間を計測できるよう準備
     lastChanged = now;
 
-    if(lastSignal){
-      lastSignal = 0;
+    if(lastSignal == HIGH_STATE){
+      lastSignal = LOW_STATE;
     } else {
-      lastSignal = 1;
+      lastSignal = HIGH_STATE;
     }
   }
-  return ret;
 }
 
 
