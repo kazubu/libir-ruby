@@ -64,6 +64,7 @@ private
       :parity => data_hex[4],
       :data0 => data_hex[5],
       :datan => data_hex[6..data_hex.length],
+      :datan_rev => [data_hex[6..data_hex.length]].pack("H*").unpack("B*").pack("b*").unpack("H*"),
       :data_hex => data_hex
     }
   end
