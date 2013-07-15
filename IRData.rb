@@ -2,19 +2,13 @@ class IRData
   @data = []
   @format = nil
 
+  attr_reader :data, :format
+
   T = {
     :aeha => 425,
     :nec => 562,
     :sony => 600
   }
-
-  def data
-    @data
-  end
-
-  def format
-    @format
-  end
 
   def data_inspect
     case @format
