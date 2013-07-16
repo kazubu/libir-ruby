@@ -1,10 +1,5 @@
 #include <ruby.h>
 #include <wiringPi.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sched.h>
-#include <sys/types.h>
-#include "unistd.h"
 
 #define LOW_STATE 0
 #define HIGH_STATE 1
