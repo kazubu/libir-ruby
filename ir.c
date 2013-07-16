@@ -9,8 +9,8 @@
 #define LOW_STATE 0
 #define HIGH_STATE 1
 
-const int IRledPin = 1;
-const int IRrecvPin = 7;
+const int IRledPin = 18; //BCM18, wPi1
+const int IRrecvPin = 4; //BCM4, wPi7
 
 void sendIr(int irData[], int length){
   int i;
@@ -83,7 +83,7 @@ VALUE intary_to_rbary(int ia[], int length){
 }
 
 VALUE meth_initialize(){
-  if (wiringPiSetup() == -1){
+  if (wiringPiSetupGpio() == -1){
     rb_raise(rb_eFatal, "Couldn't setup wiringPi");
   }
 
