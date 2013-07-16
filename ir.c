@@ -70,18 +70,6 @@ VALUE readIr() {
   }
 }
 
-
-VALUE intary_to_rbary(int ia[], int length){
-  VALUE ra = rb_ary_new();
-  int i;
-
-  for(i=0;i<length;i++){
-    rb_ary_push(ra, INT2FIX(ia[i]));
-  }
-
-  return ra;
-}
-
 VALUE meth_initialize(){
   if (wiringPiSetupGpio() == -1){
     rb_raise(rb_eFatal, "Couldn't setup wiringPi");
