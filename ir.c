@@ -9,6 +9,7 @@ const int IRrecvPin = 4; //BCM4, wPi7
 
 void sendIr(int irData[], int length){
   int i;
+  delayMicrosecondsHard(50);
 
   for(i=0;i<length;i++){
     if(i%2 == 0){ //奇数データ目でON
