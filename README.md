@@ -1,5 +1,5 @@
 # libir-ruby
 
-## placeholder
+IR-Controller and parser library for Ruby.
 
-placeholder
+This library requires wiringPi.
