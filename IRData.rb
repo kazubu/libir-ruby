@@ -45,16 +45,10 @@ private
 
   def data_inspect_aeha
     data = @data.map{|v| (v / T[:aeha])}
-    data_bin = "" 
-    for i in 1..((data.size/2)-1)
-      d1 = data[i*2]
-      d2 = data[1+i*2]
-
-      if d1 == 1 && d2 == 3
-        data_bin << "1"
-      elsif d1 == 1 && d2 == 1
-        data_bin << "0"
-      end
+    data_bin = ""
+    data.each_slice(2){|a|
+      data_bin << "1" if a == [1,3]
+      data_bin << "0" if a == [1,1]
     end
 
     data_hex = [data_bin].pack("B*").unpack("H*")[0]
