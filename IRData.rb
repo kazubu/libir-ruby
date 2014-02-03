@@ -47,6 +47,36 @@ private
     data = @data.map{|v| (v / T[:aeha])}
     data_bin = ""
     data.each_slice(2){|a|
+      next if a == [8,4]
+      data_bin << "1" if a == [1,3]
+      data_bin << "0" if a == [1,1]
+      # TODO if a == [8,8] REPEAT
+    }
+
+    data_hex = [data_bin].pack("B*").unpack("H*")[0]
+
+    datan = data_hex[6..data_hex.length]
+    datan_ary = datan.each_char.each_slice(2).map{|a| a.join}
+    datan_rev = [datan].pack("H*").unpack("B*").pack("b*").unpack("H*")[0]
+    datan_rev_ary = datan_rev.each_char.each_slice(2).map{|a| a.join}
+
+    return {
+      :customer_code => data_hex[0..3],
+      :parity => data_hex[4],
+      :data0 => data_hex[5],
+      :datan => datan,
+      :datan_ary => datan_ary,
+      :datan_rev => datan_rev,
+      :datan_rev_ary => datan_rev_ary,
+      :data_hex => data_hex
+    }
+  end
+
+  def data_inspect_nec
+    data = @data.map{|v| (v / T[:nec])}
+    data_bin = ""
+    data.each_slice(2){|a|
+      next if a == [16,8]
       data_bin << "1" if a == [1,3]
       data_bin << "0" if a == [1,1]
     }
@@ -55,17 +85,10 @@ private
 
     return {
       :customer_code => data_hex[0..3],
-      :parity => data_hex[4],
-      :data0 => data_hex[5],
-      :datan => data_hex[6..data_hex.length],
-      :datan_rev => [data_hex[6..data_hex.length]].pack("H*").unpack("B*").pack("b*").unpack("H*"),
+      :datan => data_hex[4..data_hex.length],
+      :datan_rev => [data_hex[4..data_hex.length]].pack("H*").unpack("B*").pack("b*").unpack("H*"),
       :data_hex => data_hex
     }
-  end
-
-  def data_inspect_nec
-    raise 'not implemented yet'
-    data = @data.map{|v| (v / T[:nec])}
   end
 
   def data_inspect_sony
