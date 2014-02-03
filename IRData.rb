@@ -49,7 +49,7 @@ private
     data.each_slice(2){|a|
       data_bin << "1" if a == [1,3]
       data_bin << "0" if a == [1,1]
-    end
+    }
 
     data_hex = [data_bin].pack("B*").unpack("H*")[0]
 
