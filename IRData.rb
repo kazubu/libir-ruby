@@ -83,10 +83,17 @@ private
 
     data_hex = [data_bin].pack("B*").unpack("H*")[0]
 
+    datan = data_hex[4..data_hex.length]
+    datan_ary = datan.each_char.each_slice(2).map{|a| a.join}
+    datan_rev = [datan].pack("H*").unpack("B*").pack("b*").unpack("H*")[0]
+    datan_rev_ary = datan_rev.each_char.each_slice(2).map{|a| a.join}
+
     return {
       :customer_code => data_hex[0..3],
-      :datan => data_hex[4..data_hex.length],
-      :datan_rev => [data_hex[4..data_hex.length]].pack("H*").unpack("B*").pack("b*").unpack("H*"),
+      :datan => datan,
+      :datan_ary => datan_ary,
+      :datan_rev => datan_rev,
+      :datan_rev_ary => datan_rev_ary,
       :data_hex => data_hex
     }
   end
